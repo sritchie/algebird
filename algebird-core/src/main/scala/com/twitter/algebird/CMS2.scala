@@ -72,7 +72,7 @@ object CMS2 {
       u => empty[K],
       x => x)
 
-  private case class Empty[K]() extends CMS2[K] {
+  private[algebird] case class Empty[K]() extends CMS2[K] {
     def totalCount: Long = 0L
 
     def frequency(value: K)(implicit ctxt: Context[K]): Approximate[Long] =
@@ -93,7 +93,7 @@ object CMS2 {
     private[algebird] def rowSumInvariant(implicit ctxt: Context[K]): Boolean = true
   }
 
-  private case class Single[K](k: K, totalCount: Long) extends CMS2[K] {
+  private[algebird] case class Single[K](k: K, totalCount: Long) extends CMS2[K] {
     require(totalCount >= 0, s"count should be non-negative (got: $totalCount)")
 
     def frequency(value: K)(implicit ctxt: Context[K]): Approximate[Long] =
@@ -139,7 +139,7 @@ object CMS2 {
    * implies, if all rows have a single column with totalCount, this
    * is a singleton dense value).
    */
-  private case class Dense[K](cells: Array[Long], var totalCount: Long) extends CMS2[K] {
+  private[algebird] case class Dense[K](cells: Array[Long], var totalCount: Long) extends CMS2[K] {
 
     override def hashCode: Int =
       totalCount.toInt ^ java.util.Arrays.hashCode(cells)
@@ -290,8 +290,7 @@ object CMS2 {
       Context(e, d, "fast as heck".hashCode)
   }
 
-  case class Hasher[K](as: Array[Int], bs: Array[Int], width: Int)(implicit h: CMSHasher[K]) {
-    //def hash(row: Int, value: K): Int = h.hash(as(row), bs(row), width)(value)
+  case class Hasher[K](as: Array[Int], width: Int)(implicit h: CMSHasher[K]) {
     def hash(row: Int, value: K): Int = h.hash(as(row), 0, width)(value)
   }
 
@@ -304,7 +303,7 @@ object CMS2 {
       val coprimes = Iterator.continually(r.nextInt())
         .filter { a => BigInt(a).gcd(bigWidth) == one }
         .take(depth)
-      Hasher(coprimes.toArray, Array.fill(depth)(r.nextInt()), width)(h)
+      Hasher(coprimes.toArray, width)(h)
     }
   }
 

@@ -18,10 +18,10 @@ object CMS2Benchmark {
     val Seed = 1
     val JavaCharSizeInBits = 2 * 8
 
-    @Param(Array("0.1", "0.005"))
+    @Param(Array("0.0000001" /* 1E-8 */ ))
     var delta: Double = 0.0
 
-    @Param(Array("0.0000001" /* 1E-8 */ ))
+    @Param(Array("0.1", "0.005"))
     var epsilon: Double = 0.0
 
     @Param(Array("1000"))
