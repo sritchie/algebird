@@ -171,8 +171,11 @@ class CMSContraMapSpec extends WordSpec with Matchers with GeneratorDrivenProper
     val a = 4
     val b = 0
     val width = 1234
-    val x = Array(1.toByte).toSeq // same as Seq(1.toByte)
-    targetHasher.hash(a, b, width)(x) should be(677)
+    val x = Array(113.toByte).toSeq // same as Seq(1.toByte)
+    val result = targetHasher.hash(a, b, width)(x)
+    val expected = sourceHasher.hash(a, b, width)("q")
+    result should be(expected)
+    result should be(434)
   }
 
   "supports, via contramap, creating CMS monoids for such types K that are not supported out of the box" in {
