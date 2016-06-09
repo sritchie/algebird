@@ -40,6 +40,13 @@ class Cms2Laws extends PropSpec {
   property("CMS2[String] obeys row invariant") {
     check { (cms: CMS2[String]) => cms.rowSumInvariant }
   }
+
+  property("serialization round-trips") {
+    check { (cms: CMS2[String]) =>
+      val cms2 = CMS2.fromLongs[String](cms.toLongs).get
+      Equiv[CMS2[String]].equiv(cms, cms2)
+    }
+  }
 }
 
 class Cms2ApproximateProps[K: CMS2.Context: Arbitrary] extends ApproximateProperty {

@@ -66,9 +66,7 @@ object CMS2Benchmark {
       random = new scala.util.Random
 
       inputsString = (0 to ops).map(i => random.nextString(maxBits / JavaCharSizeInBits)).toVector
-      Console.out.println(s"Created ${inputsString.size} input records for String")
       inputsBigInt = inputsString.map(s => BigInt(s.getBytes)).toVector
-      Console.out.println(s"Created ${inputsBigInt.size} input records for BigInt")
     }
   }
 }

@@ -1193,7 +1193,20 @@ case class CMSHash[K: CMSHasher](a: Int, b: Int, width: Int) extends java.io.Ser
 
 /**
  * This formerly held the instances that moved to object CMSHasher
+ *
+ * These instances are slow, but here for compatibility with old
+ * serialized data. For new code, avoid these and instead use the
+ * implicits found in the CMSHasher companion object.
  */
 object CMSHasherImplicits {
 
+  implicit object CMSHasherBigInt extends CMSHasher[BigInt] {
+    override def hash(a: Int, b: Int, width: Int)(x: BigInt): Int =
+      CMSHasher.hashBytes(a, b, width)(x.toByteArray)
+  }
+
+  implicit object CMSHasherString extends CMSHasher[String] {
+    override def hash(a: Int, b: Int, width: Int)(x: String): Int =
+      CMSHasher.hashBytes(a, b, width)(x.getBytes("UTF-8"))
+  }
 }

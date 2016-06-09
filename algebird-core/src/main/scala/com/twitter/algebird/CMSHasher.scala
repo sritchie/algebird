@@ -113,7 +113,7 @@ object CMSHasher {
    * @param x Item to be hashed.
    * @return Slot assigned to item `x` in the vector of size `width`, where `x in [0, width)`.
    */
-  private def hashBytes(a: Int, b: Int, width: Int)(x: Array[Byte]): Int = {
+  private[algebird] def hashBytes(a: Int, b: Int, width: Int)(x: Array[Byte]): Int = {
     val hash: Int = scala.util.hashing.MurmurHash3.arrayHash(x, a)
     // We only want positive integers for the subsequent modulo.  This method mimics Java's Hashtable
     // implementation.  The Java code uses `0x7FFFFFFF` for the bit-wise AND, which is equal to Int.MaxValue.
@@ -121,12 +121,22 @@ object CMSHasher {
     positiveHash % width
   }
 
+  // This CMSHasher[BigInt] is newer, and faster, than the old version
+  // found in CMSHasherImplicits. Unless you have serialized data that
+  // requires the old implementation for correctness, you should be
+  // using this instance.
   implicit object CMSHasherBigInt extends CMSHasher[BigInt] {
-    override def hash(a: Int, b: Int, width: Int)(x: BigInt): Int = hashBytes(a, b, width)(x.toByteArray)
+    override def hash(a: Int, b: Int, width: Int)(x: BigInt): Int =
+      ((a * x.hashCode + b) & Int.MaxValue) % width
   }
 
+  // This CMSHasher[String] is newer, and faster, than the old version
+  // found in CMSHasherImplicits. Unless you have serialized data that
+  // requires the old implementation for correctness, you should be
+  // using this instance.
   implicit object CMSHasherString extends CMSHasher[String] {
-    override def hash(a: Int, b: Int, width: Int)(x: String): Int = hashBytes(a, b, width)(x.getBytes("UTF-8"))
+    override def hash(a: Int, b: Int, width: Int)(x: String): Int =
+      (scala.util.hashing.MurmurHash3.stringHash(x, a) & Int.MaxValue) % width
   }
 
   implicit object CMSHasherBytes extends CMSHasher[Bytes] {

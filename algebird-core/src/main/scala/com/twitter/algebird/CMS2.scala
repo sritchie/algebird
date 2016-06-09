@@ -1,7 +1,7 @@
 package com.twitter.algebird
 
 import scala.math.{ ceil, exp, log }
-import scala.util.Random
+import scala.util.{ Random, Try }
 import java.lang.Math.{ min, max }
 
 import CMS2.Context
@@ -36,6 +36,21 @@ sealed abstract class CMS2[K] {
     those.foldLeft(copy()) { (acc, c) => acc.append(c) }
 
   private[algebird] def rowSumInvariant(implicit ctxt: Context[K]): Boolean
+
+  def toLongs(implicit ctxt: Context[K]): Array[Long] =
+    this match {
+      case CMS2.Empty() =>
+        Array[Long](0L)
+      case CMS2.Single(k, n) =>
+        CMS2.Dense.empty[K].add(k, n).toLongs
+      case CMS2.Dense(cells, total) =>
+        val size = cells.length + 2
+        val longs = new Array[Long](size)
+        longs(0) = -1L
+        System.arraycopy(cells, 0, longs, 1, cells.length)
+        longs(size - 1) = total
+        longs
+    }
 }
 
 object CMS2 {
@@ -51,6 +66,25 @@ object CMS2 {
 
   def addAllCounts[K: CMS2.Context](ks: TraversableOnce[(K, Long)]): CMS2[K] =
     new Empty[K].addAllCounts(ks)
+
+  def fromLongs[K](longs: Array[Long])(implicit ctxt: Context[K]): Try[CMS2[K]] = Try {
+    val size = longs.length
+    require(size > 0, "empty arrays are not valid")
+    longs(0) match {
+      case 0L =>
+        require(size == 1, s"invalid CMS2.Empty instance (length: $size)")
+        Empty[K]
+      case -1L =>
+        require(size == ctxt.area + 2, s"invalid CMS2.Dense instance ($size was not ${ctxt.area})")
+        val total = longs(size - 1)
+        require(total >= 0, s"invalid CMS2.Dense instance (totalCount was $total)")
+        val cells = new Array[Long](ctxt.area)
+        System.arraycopy(longs, 1, cells, 0, ctxt.area)
+        Dense(cells, total)
+      case x =>
+        throw new IllegalArgumentException(s"invalid prefix $x")
+    }
+  }
 
   /**
    * This uses internal mutable state to very efficiently
@@ -240,8 +274,9 @@ object CMS2 {
        */
       val h = ctxt.hasher
       val d = ctxt.depth
+      val w = ctxt.width
       var row = 0
-      while ((row < d) && (totalCount == cells(h.hash(row, s.k)))) { row += 1 }
+      while ((row < d) && (totalCount == cells(row * w + h.hash(row, s.k)))) row += 1
       row == d
     }
 
@@ -274,6 +309,8 @@ object CMS2 {
 
     final val width: Int = ceil((exp(1.0) / epsilon).toFloat.toDouble).toInt
     final val depth: Int = ceil(log(1.0 / delta)).toInt
+
+    final def area: Int = width * depth
 
     final val hasher: Hasher[K] = Hasher.generate(depth, width, seed)(h)
 
