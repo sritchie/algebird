@@ -116,11 +116,9 @@ class BatchedSemigroup[T](batchSize: Int, sg: Semigroup[T]) extends Semigroup[Ba
 
 class BatchedMonoid[T](batchSize: Int, monoid: Monoid[T]) extends BatchedSemigroup(batchSize, monoid) with Monoid[Batched[T]] {
   def zero: Batched[T] = Batched(monoid.zero)
-  override def isNonZero(b: Batched[T]): Boolean = isNonZeroRec(List(b))
 
-  @annotation.tailrec private def isNonZeroRec(stack: List[Batched[T]]): Boolean = stack match {
-    case Nil => true
-    case Batched.Item(i) :: tail => monoid.isNonZero(i) && isNonZeroRec(tail)
-    case Batched.Items(a, b) :: tail => isNonZeroRec(a :: b :: tail)
-  }
+  // if we knew that (a+b=0) only for (a=0, b=0), we could instead do:
+  //   new Batched.ItemsIterator(b).exists(monoid.isNonZero)
+  override def isNonZero(b: Batched[T]): Boolean =
+    monoid.isNonZero(b.sum(monoid))
 }
