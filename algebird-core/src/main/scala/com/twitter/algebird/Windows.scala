@@ -1,41 +1,30 @@
 package com.twitter.algebird
 
 /**
- * Sam's Notes:
+ *         800 900      700
+ *          |   |   1000 |
+ * Vector ( 19, 20, 23, 16 )
+ *    index=2        ^
+ *    time=1000
+ *    step=100
  *
- * * Found one bug with +; + was failing with instances of different
- *   lengths. Fixed with a different, probably inefficient `+`
- *   implementation... I bet we could make it faster by reversing the
- *   way we track items in the ring buffer, by advancing backwards?
- */
-
-//          800 900      700
-//          |   |   1000 |
-// Vector ( 19, 20, 23, 16 )
-//    index=2        ^
-//    time=1000
-//    step=100
-
-// [700, 800): saw a sum of 16
-// [800, 900): saw a sum of 19
-// [900, 1000): saw a sum of 20
-// [1000, 1100): saw at least a sum of 23 *in progress*
-
-// 24 hour moving window, with 30 minute resolution (step)
-// (48 + 1 buckets)
-//
-// time range you can support: step * (slots - 1)
-
-/**
+ * [700, 800): saw a sum of 16
+ * [800, 900): saw a sum of 19
+ * [900, 1000): saw a sum of 20
+ * [1000, 1100): saw at least a sum of 23 *in progress*
+ *
+ * 24 hour moving window, with 30 minute resolution (step)
+ * (48 + 1 buckets)
+ *
+ * time range you can support: step * (slots - 1)
+ *
  * We only bump `time` in increments of `step`. `time`
  * references the inclusive lower bound of the bucket you're currently
  * in.
  */
 case class Windows[A](buf: RingBuf[A], step: Long, time: Long) { lhs =>
-  /**
-   * Inclusive lower bound of the supplied slot offset, looking back
-   * from the current slot.
-   */
+  // Inclusive lower bound of the supplied slot offset, looking back
+  // from the current slot.
   private def minTime: Long = time - (buf.size - 1) * step
 
   private[this] def stepsFrom(beginning: Long, now: Long): Long =
@@ -85,11 +74,9 @@ case class Windows[A](buf: RingBuf[A], step: Long, time: Long) { lhs =>
     Windows(newBuf, step, currTime)
   }
 
-  def lowerBoundSum(implicit ev: Monoid[A]): A =
-    ev.sum(buf.iterator.drop(1))
+  def lowerBoundSum(implicit ev: Monoid[A]): A = ev.sum(buf.iterator.drop(1))
 
-  def upperBoundSum(implicit ev: Monoid[A]): A =
-    ev.sum(buf.slots)
+  def upperBoundSum(implicit ev: Monoid[A]): A = ev.sum(buf.slots)
 }
 
 object Windows {
