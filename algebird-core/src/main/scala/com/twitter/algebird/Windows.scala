@@ -26,30 +26,17 @@ import scala.annotation.tailrec
 // 24 hour moving window, with 30 minute resolution (step)
 // (48 + 1 buckets)
 
-/**
- * case class RingBuf[A](slots: Vector[A], index: Int) {
- * @inline private[this] def makeIndex(i: Long): Int =
- * ((i + slots.size) % slots.size).toInt
- *
- * private[this] def clear(i: Int)(implicit ev: Monoid[A]): RingBuf[A] =
- * vect.updated(i, ev.zero)
- *
- * def add[A](idx: Int, a: A)(implicit ev: Monoid[A]) = {
- * val sum = ev.plus(slots(idx), a)
- * }
- *
- * // oldest-to-newest iterator across partial sums
- * def iterator: Iterator[A] =
- * (1 to slots.size).iterator.map(i => slots(makeIndex(index + i)))
- *
- * // newest-to-oldest iterator across partial sums
- * def reverseIterator: Iterator[A] =
- * (0 until slots.size).iterator.map(i => slots(makeIndex(index - i)))
- * }
- */
+case class RingBuf[A](slots: Vector[A], index: Int) {
+  @inline private[this] def makeIndex(i: Long): Int =
+    ((i + slots.size) % slots.size).toInt
 
-// time range you can support: step * (slots - 1)
-case class Windows[A](slots: Vector[A], index: Int, step: Long, time: Long) { lhs =>
+  private[this] def clear(v: Vector[A], i: Int)(implicit ev: Monoid[A]): Vector[A] =
+    slots.updated(i, ev.zero)
+
+  // def add(idx: Int, a: A)(implicit ev: Monoid[A]): RingBuf[A] = {
+  //   val sum = ev.plus(slots(idx), a)
+  // }
+
   // oldest-to-newest iterator across partial sums
   def iterator: Iterator[A] =
     (1 to slots.size).iterator.map(i => slots(makeIndex(index + i)))
@@ -57,9 +44,48 @@ case class Windows[A](slots: Vector[A], index: Int, step: Long, time: Long) { lh
   // newest-to-oldest iterator across partial sums
   def reverseIterator: Iterator[A] =
     (0 until slots.size).iterator.map(i => slots(makeIndex(index - i)))
+}
 
+// time range you can support: step * (slots - 1)
+case class Windows[A](buf: RingBuf[A], step: Long, time: Long) { lhs =>
+  // ## Slot/Time Mappings
+  /**
+   * Inclusive lower bound of the supplied slot offset, looking back
+   * from the current slot..
+   */
+  def timeOf(i: Int): Long = time - makeIndex(i) * step
+
+  /**
+   * Step back all the way around the ring buffer.
+   */
+  def minTime: Long = timeOf(buf.slots.size - 1)
+
+  /**
+   * Slots are 0-indexed from the current slot, looking backwards.
+   *
+   * i=4, index=5, vectorIndex=1
+   * i=6, index=5, indexDelta=slots.size - 1 (ie last item)
+   */
+  private[this] def slotContains(i: Int, currTime: Long): Boolean = {
+    val startTime = timeOf(buf.index - i)
+    startTime <= currTime && currTime < (startTime + step)
+  }
+
+  // invariant: currTime must in [minTime, time + step).
+  private[this] def getSlot(currTime: Long): Int = {
+    require(minTime <= currTime)
+    require(currTime < time + step)
+    @tailrec def loop(thisIndex: Int): Int =
+      if (slotContains(thisIndex, currTime)) thisIndex
+      else loop(makeIndex(thisIndex - 1))
+    loop(buf.index)
+  }
+
+  /**
+   * Remaining Implementation
+   */
   @inline private[this] def makeIndex(i: Long): Int =
-    ((i + slots.size) % slots.size).toInt
+    ((i + buf.slots.size) % buf.slots.size).toInt
 
   private[this] def clear(vect: Vector[A], i: Int)(implicit ev: Monoid[A]): Vector[A] =
     vect.updated(i, ev.zero)
@@ -80,68 +106,36 @@ case class Windows[A](slots: Vector[A], index: Int, step: Long, time: Long) { lh
       // we do need to slide forward
       val delta = currTime - time
       val i = (delta / step).toLong
-      val nextIndex: Int = makeIndex(index + i)
+      val nextIndex: Int = makeIndex(buf.index + i)
       val w = if (i == 1) {
         // moving forward by 1 time step
-        Windows(clear(slots, nextIndex), nextIndex, step, time + step)
+        Windows(RingBuf(clear(buf.slots, nextIndex), nextIndex), step, time + step)
       } else {
         require(i > 1, s"currTime=$currTime, step=$step, time=$time, delta=$delta, i=$i")
         // moving forward by i (>= 2) time steps
-        val vect = (1L to (i min slots.size)).foldLeft(slots) { (acc, j) =>
-          clear(acc, makeIndex(index + j))
+        val vect = (1L to (i min buf.slots.size)).foldLeft(buf.slots) { (acc, j) =>
+          clear(acc, makeIndex(buf.index + j))
         }
-        Windows(vect, nextIndex, step, time + (i * step))
+        Windows(RingBuf(vect, nextIndex), step, time + (i * step))
       }
       require(currTime < w.time + w.step, s"currTime=$currTime, time=$time, w.time=${w.time}")
       require(currTime >= w.minTime)
       w
     }
 
-  /**
-   * Inclusive lower bound of the supplied slot offset, looking back
-   * from the current slot..
-   */
-  def timeOf(i: Int): Long = time - makeIndex(i) * step
-
-  /**
-   * Step back all the way around the ring buffer.
-   */
-  def minTime: Long = timeOf(slots.size - 1)
-
-  /**
-   * Slots are 0-indexed from the current slot, looking backwards.
-   *
-   * i=4, index=5, vectorIndex=1
-   * i=6, index=5, indexDelta=slots.size - 1 (ie last item)
-   */
-  private[this] def slotContains(i: Int, currTime: Long): Boolean = {
-    val startTime = timeOf(index - i)
-    startTime <= currTime && currTime < (startTime + step)
-  }
-
-  // invariant: currTime must in [minTime, time + step).
-  private[this] def getSlot(currTime: Long): Int = {
-    require(minTime <= currTime)
-    require(currTime < time + step)
-    @tailrec def loop(thisIndex: Int): Int =
-      if (slotContains(thisIndex, currTime)) thisIndex
-      else loop(makeIndex(thisIndex - 1))
-    loop(index)
-  }
-
   def add(a: A, currTime: Long)(implicit ev: Monoid[A]): Windows[A] =
     if (currTime < minTime) this
     else if (currTime < time + step) {
       val i = getSlot(currTime)
-      val sum = ev.plus(slots(i), a)
-      copy(slots = slots.updated(i, sum))
+      val sum = ev.plus(buf.slots(i), a)
+      copy(buf = buf.copy(slots = buf.slots.updated(i, sum)))
     } else step(currTime).add(a, currTime)
 
   def lowerBoundSum(implicit ev: Monoid[A]): A =
-    ev.sum(iterator.drop(1))
+    ev.sum(buf.iterator.drop(1))
 
   def upperBoundSum(implicit ev: Monoid[A]): A =
-    ev.sum(slots)
+    ev.sum(buf.slots)
 
   //   [3,5,6,1]
   // [1,2,4,3]
@@ -159,11 +153,11 @@ case class Windows[A](slots: Vector[A], index: Int, step: Long, time: Long) { lh
     val currTime = lhs.time max rhs.time
     val lhs2 = lhs.step(currTime)
     val rhs2 = rhs.step(currTime)
-    val newV = (lhs2.reverseIterator zip rhs2.reverseIterator).map {
+    val newV = (lhs2.buf.reverseIterator zip rhs2.buf.reverseIterator).map {
       case (l, r) => ev.plus(l, r)
     }
-    val newEnd = lhs.slots.size min rhs.slots.size
-    Windows(newV.toVector.reverse, makeIndex(newEnd - 1), lhs2.step, currTime)
+    val newEnd = lhs.buf.slots.size min rhs.buf.slots.size
+    Windows(RingBuf(newV.toVector.reverse, makeIndex(newEnd - 1)), lhs2.step, currTime)
   }
 }
 
@@ -172,7 +166,7 @@ object Windows {
   // timeNow=53ms
   // adjustedTime=0ms
   def empty[A](timeStep: Int, numSteps: Int)(implicit ev: Monoid[A]): Windows[A] =
-    Windows(Vector.fill(numSteps + 1)(ev.zero), 0, timeStep, 0L)
+    Windows(RingBuf(Vector.fill(numSteps + 1)(ev.zero), 0), timeStep, 0L)
 
   def monoid[A](timeStep: Int, numSteps: Int)(implicit ev: Monoid[A]): Monoid[Windows[A]] =
     new Monoid[Windows[A]] {
@@ -187,6 +181,6 @@ object Windows {
       def equiv(x: Windows[A], y: Windows[A]): Boolean =
         (x.step == y.step) &&
           (x.time == y.time) &&
-          (x.iterator zip y.iterator).forall { case (m, n) => ev.equiv(m, n) }
+          (x.buf.iterator zip y.buf.iterator).forall { case (m, n) => ev.equiv(m, n) }
     }
 }
