@@ -82,7 +82,7 @@ object RingBuf {
     RingBuf(Vector.fill(size)(ev.zero), 0)
 
   def monoid[A](size: Int)(implicit ev: Monoid[A]): Monoid[RingBuf[A]] =
-    Monoid.from(RingBuf.empty(size))(_ + _)
+    Monoid.from[RingBuf[A]](RingBuf.empty(size))(_ + _)
 
   implicit def equiv[A: Equiv](implicit ev: Equiv[A]): Equiv[RingBuf[A]] =
     new Equiv[RingBuf[A]] {
