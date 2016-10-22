@@ -21,7 +21,7 @@ class WindowsLaws extends PropSpec with PropertyChecks with Matchers {
       vect <- Gen.buildableOfN[Vector[A], A](w.totalSize, arbitrary[A])
       n <- arbitrary[Short].map(_ & 0xffff)
       i <- arbitrary[Short].map(i => (i & 0xffff) % w.totalSize)
-    } yield Windows(RingBuf(vect, Idx(i)), w.step, (n * w.totalSize + i) * w.step))
+    } yield Windows(RingBuf(vect, RingBuf.Idx(i)), w.step, (n * w.totalSize + i) * w.step))
 
   def runProperties[A: Arbitrary: Equiv: Monoid](implicit w: WindowsParams): Unit =
     check(monoidLawsEquiv[Windows[A]])

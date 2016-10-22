@@ -36,15 +36,9 @@ case class Windows[A](buf: RingBuf[A], step: Long, time: Long) { lhs =>
   def step(currTime: Long)(implicit ev: Monoid[A]): Windows[A] =
     if (currTime < time + step) this
     else {
-      // we do need to slide forward
+      // slide forward by i (>= 1) time steps
       val i = stepsFrom(time, currTime)
-      require(i >= 1, s"currTime=$currTime, step=$step, time=$time, i=$i")
-
-      // moving forward by i (>= 1) time steps
-      val w = Windows(buf.step(i), step, time + (i * step))
-      require(currTime < w.time + w.step, s"currTime=$currTime, time=$time, w.time=${w.time}")
-      require(currTime >= w.minTime)
-      w
+      Windows(buf.step(i), step, time + (i * step))
     }
 
   /**

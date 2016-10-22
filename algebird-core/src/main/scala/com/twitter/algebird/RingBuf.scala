@@ -1,24 +1,6 @@
 package com.twitter.algebird
 
-/**
- * Value class to hold references to indices internal to RingBuf.
- */
-case class Idx(value: Int) extends AnyVal {
-  def +(i: Int): Idx = Idx(value + i)
-  def -(i: Int): Idx = Idx(value - i)
-
-  // Look/ itself up in the supplied vector.
-  def of[A](v: Vector[A]): A = v(value)
-
-  // updates the supplied vector with the supplied value.
-  def update[A](v: Vector[A], a: A): Vector[A] = v.updated(value, a)
-}
-
-object Idx {
-  def bounded(i: Long, bound: Int): Idx = Idx(((i + bound) % bound).toInt)
-}
-
-case class RingBuf[A](slots: Vector[A], index: Idx) { lhs =>
+case class RingBuf[A](slots: Vector[A], index: RingBuf.Idx) { lhs =>
   import RingBuf._
   /**
    * Slots are 0-indexed from the current `index`, looking backwards.
@@ -91,6 +73,24 @@ case class RingBuf[A](slots: Vector[A], index: Idx) { lhs =>
 }
 
 object RingBuf {
+  /**
+   * Value class to hold references to indices internal to RingBuf.
+   */
+  case class Idx(value: Int) extends AnyVal {
+    def +(i: Int): Idx = Idx(value + i)
+    def -(i: Int): Idx = Idx(value - i)
+
+    // Looks itself up in the supplied vector.
+    def of[A](v: Vector[A]): A = v(value)
+
+    // updates the supplied vector with the supplied value.
+    def update[A](v: Vector[A], a: A): Vector[A] = v.updated(value, a)
+  }
+
+  object Idx {
+    def bounded(i: Long, bound: Int): Idx = Idx(((i + bound) % bound).toInt)
+  }
+
   def empty[A](size: Int)(implicit ev: Monoid[A]): RingBuf[A] =
     RingBuf(Vector.fill(size)(ev.zero), Idx(0))
 
