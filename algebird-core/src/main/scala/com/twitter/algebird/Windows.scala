@@ -80,7 +80,7 @@ object Windows {
   def empty[A: Monoid](timeStep: Int, numSteps: Int): Windows[A] =
     Windows(RingBuf.empty[A](numSteps + 1), timeStep, 0L)
 
-  def monoid[A](timeStep: Int, numSteps: Int)(implicit ev: Monoid[A]): Monoid[Windows[A]] =
+  def monoid[A: Monoid](timeStep: Int, numSteps: Int): Monoid[Windows[A]] =
     Monoid.from(Windows.empty(timeStep, numSteps))(_ + _)
 
   implicit def equiv[A: Equiv]: Equiv[Windows[A]] =

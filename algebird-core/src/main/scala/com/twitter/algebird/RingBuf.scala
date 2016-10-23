@@ -94,7 +94,7 @@ object RingBuf {
   def empty[A](size: Int)(implicit ev: Monoid[A]): RingBuf[A] =
     RingBuf(Vector.fill(size)(ev.zero), Idx(0))
 
-  def monoid[A](size: Int)(implicit ev: Monoid[A]): Monoid[RingBuf[A]] =
+  def monoid[A: Monoid](size: Int): Monoid[RingBuf[A]] =
     Monoid.from[RingBuf[A]](RingBuf.empty(size))(_ + _)
 
   implicit def equiv[A: Equiv](implicit ev: Equiv[A]): Equiv[RingBuf[A]] =
