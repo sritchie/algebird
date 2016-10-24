@@ -44,4 +44,28 @@ class ExpHistLaws extends PropSpec with PropertyChecks with Matchers {
       incs.upperBoundSum shouldEqual adds.upperBoundSum
     }
   }
+
+  property("l-canonical representation round-trips") {
+    forAll { (x: Long, kIn: Short) =>
+      // i and k must be positive, > 0.
+      val i = (x & 0xfffffff) + 1
+      val k = (kIn & 0xfffff) + 1
+      ExpHist.expand(ExpHist.lNormalize(i, k)) shouldEqual i
+    }
+  }
+
+  property("all i except last have either k/2, k/2 + 1 buckets") {
+    forAll { (x: Long, kIn: Short) =>
+      // i and k must be positive, > 0.
+      val i = (x & 0xfffffff) + 1
+      val k = (kIn & 0xfffff) + 1
+
+      val lower = ExpHist.minBuckets(k)
+      val upper = ExpHist.maxBuckets(k)
+
+      ExpHist.lNormalize(i, k).init.forall { numBuckets =>
+        lower <= numBuckets && numBuckets <= upper
+      } shouldBe true
+    }
+  }
 }

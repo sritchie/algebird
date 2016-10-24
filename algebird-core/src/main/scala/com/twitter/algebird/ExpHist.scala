@@ -9,10 +9,46 @@ package com.twitter.algebird
  * then do some of the fancier business in the paper!
  */
 object ExpHist {
+  private[this] def log2(i: Float): Double = math.log(i) / math.log(2)
+
+  def minBuckets(k: Int) = math.ceil(k / 2.0).toInt
+  def maxBuckets(k: Int) = math.ceil(k / 2.0).toInt + 1
+
+  /**
+   * Returns a sequence of the number of buckets of each size 2^i
+   * (where i is the vector index) used to represent s for a given k.
+   */
+  def lNormalize(s: Long, k: Int): Vector[Int] = {
+    val l = minBuckets(k)
+    val j = log2(s / l + 1).toInt
+
+    // returns the little-endian bit rep of the supplied number.
+    def binarize(sh: Long): Vector[Int] =
+      ((0 until j).map { i => l + ((sh.toInt >> i) % 2) }).toVector
+
+    val twoJ = 1 << j
+    val sPrime = s - (twoJ - 1) * l
+
+    if (sPrime >= twoJ) {
+      val m = (sPrime >> j)
+      val sHat = (sPrime - m * twoJ)
+      binarize(sHat) :+ m.toInt
+    } else binarize(sPrime)
+  }
+
+  /**
+   * Expand out a number's l-normalized form into the original
+   * number.
+   */
+  def expand(form: Vector[Int]): Long =
+    form.zipWithIndex
+      .map { case (i, exp) => i.toLong << exp }
+      .reduce(_ + _)
+
   case class Config(k: Int, windowSize: Long) {
     // Maximum number of buckets of size 2^i allowed in the repr of
     // this exponential histogram.
-    def maxBuckets: Int = math.ceil(k / 2.0).toInt + 1
+    def maxBuckets: Int = ExpHist.maxBuckets(k)
 
     // Returns the last timestamp before the window. any ts <= [the
     // returned timestamp] is outside the window.
@@ -175,7 +211,7 @@ case class BucketSeq(exp: BucketSeq.Pow2, timestamps: Vector[Long]) { l =>
 object BucketSeq {
   case class Pow2(exp: Int) extends AnyVal { l =>
     def double: Pow2 = Pow2(exp + 1)
-    def value: Long = (2 << exp) / 2
+    def value: Long = 1 << exp
     def *(r: Pow2) = Pow2(l.exp + r.exp)
   }
 
