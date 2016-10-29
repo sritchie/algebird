@@ -71,7 +71,7 @@ object ExpHist {
     def expiration(currTime: Long): Long = currTime - windowSize
   }
 
-  def empty(conf: Config): ExpHist = ExpHist(conf, Vector.empty, 0L, 0L, 0L)
+  def empty(conf: Config): ExpHist = ExpHist(conf, Vector.empty, 0L)
   def empty(k: Int, windowSize: Long): ExpHist = empty(Config(k, windowSize))
 }
 
@@ -120,7 +120,7 @@ case class ExpHist(conf: ExpHist.Config, buckets: Vector[BucketSeq], time: Long)
   // Stupid implementation of `add` - just inc a bunch of times with
   // the same timestamp.
   def add(i: Long, timestamp: Long): ExpHist =
-    (0L until i).foldLeft(this.step(timestamp)) {
+    (0L until i).foldLeft(step(timestamp)) {
       case (acc, _) => acc.inc(timestamp)
     }
 
@@ -244,7 +244,6 @@ object BucketSeq {
         val (evolved, carry) = withCarry.evolve(limit)
         (evolved +: acc, carry)
     }
-
     extra.map(_.expand(limit) ++ ret).getOrElse(ret)
   }
 }
