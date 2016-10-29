@@ -71,17 +71,20 @@ object ExpHist {
     def expiration(currTime: Long): Long = currTime - windowSize
   }
 
-  def empty(conf: Config): ExpHist = ExpHist(conf, Vector.empty, 0L)
+  def empty(conf: Config): ExpHist = ExpHist(conf, Vector.empty, 0L, 0L, 0L)
   def empty(k: Int, windowSize: Long): ExpHist = empty(Config(k, windowSize))
 }
 
-case class ExpHist(conf: ExpHist.Config, buckets: Vector[BucketSeq], time: Long) {
+/**
+ * @param total counter for the total size of all buckets.
+ * @param last the size of the oldest bucket.
+ */
+case class ExpHist(conf: ExpHist.Config, buckets: Vector[BucketSeq], time: Long, last: Long, total: Long) {
   /**
    * Returns the same ExpHist with a new window. If the new window is
    * smaller than the current window, evicts older items.
    */
-  def withWindow(newWindow: Long): ExpHist =
-    copy(conf = conf.copy(windowSize = newWindow)).step(time)
+  def withWindow(newWindow: Long): ExpHist = copy(conf = conf.copy(windowSize = newWindow)).step(time)
 
   /**
    * Step forward to `newTime`, evicting any wrapped buckets that
@@ -91,9 +94,16 @@ case class ExpHist(conf: ExpHist.Config, buckets: Vector[BucketSeq], time: Long)
     if (newTime <= time) this
     else {
       val t = conf.expiration(newTime)
+
+      // TODO this is junk, but now the madness is contained.
+      val newBuckets = buckets.flatMap(_.expire(t))
+      val newLast = newBuckets.headOption.map(_.bucketSize).getOrElse(0L)
+      val newTotal = newBuckets.map(_.count).reduceLeftOption(_ + _).getOrElse(0L)
+
       copy(
         buckets = buckets.flatMap(_.expire(t)),
-        time = newTime)
+        time = newTime, total = newTotal, last = newLast
+      )
     }
 
   /**
@@ -114,7 +124,9 @@ case class ExpHist(conf: ExpHist.Config, buckets: Vector[BucketSeq], time: Long)
         case None => Vector(BucketSeq.one(timestamp))
         case Some(bucketSeq) => stepped.buckets.init :+ (bucketSeq + timestamp)
       }
-    stepped.copy(buckets = BucketSeq.normalize(conf.maxBuckets, newBuckets))
+    stepped.copy(
+      total = total + 1,
+      buckets = BucketSeq.normalize(conf.maxBuckets, newBuckets))
   }
 
   // Stupid implementation of `add` - just inc a bunch of times with
@@ -123,12 +135,6 @@ case class ExpHist(conf: ExpHist.Config, buckets: Vector[BucketSeq], time: Long)
     (0L until i).foldLeft(step(timestamp)) {
       case (acc, _) => acc.inc(timestamp)
     }
-
-  // TODO: Convert these to constructor params, compute as we go.
-  // counter for the total size of all buckets.
-  def total: Long = buckets.map(_.count).reduceLeftOption(_ + _).getOrElse(0L)
-  // returns the size of the oldest bucket.
-  def last: Long = buckets.headOption.map(_.bucketSize).getOrElse(0L)
 
   def lowerBoundSum: Long = total - last
   def upperBoundSum: Long = total
