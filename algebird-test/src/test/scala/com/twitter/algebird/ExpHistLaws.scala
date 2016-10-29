@@ -6,10 +6,57 @@ import org.scalatest.prop.Checkers.check
 import org.scalacheck.{ Gen, Arbitrary }
 import Arbitrary.arbitrary
 
+case class PosNum[T: Numeric](value: T)
+
+object PosNum {
+  implicit def arb[T: Numeric: Gen.Choose]: Arbitrary[PosNum[T]] =
+    Arbitrary(for { p <- Gen.posNum[T] } yield PosNum(p))
+}
+
+case class Tick(count: Long, timestamp: Long)
+
+object Tick {
+  implicit val ord: Ordering[Tick] =
+    Ordering.by { t: Tick => (t.timestamp, t.count) }
+
+  implicit val arb: Arbitrary[Tick] =
+    Arbitrary(for {
+      ts <- Gen.posNum[Long]
+      tick <- Gen.posNum[Long]
+    } yield Tick(tick - 1L, ts))
+}
+
+case class NonEmptyList[T](items: List[T]) {
+  def sorted(implicit ev: Ordering[T]): List[T] = items.sorted
+}
+
+object NonEmptyList {
+  implicit def arb[T: Ordering: Arbitrary]: Arbitrary[NonEmptyList[T]] =
+    Arbitrary(for {
+      l <- Gen.nonEmptyListOf(arbitrary[T])
+    } yield NonEmptyList[T](l))
+}
+
 class ExpHistLaws extends PropSpec with PropertyChecks with Matchers {
   import BaseProperties._
 
-  def pos(i: Long): Long = if (i == Long.MinValue) Long.MaxValue else Math.abs(i)
+  implicit val conf: Arbitrary[ExpHist.Config] =
+    Arbitrary(for {
+      k <- Gen.posNum[Short]
+      windowSize <- Gen.posNum[Long]
+    } yield ExpHist.Config(k, windowSize))
+
+  def addAll(e: ExpHist, ticks: List[Tick]): ExpHist =
+    ticks.foldLeft(e) {
+      case (e, Tick(count, timestamp)) =>
+        e.add(count, timestamp)
+    }
+
+  implicit val expHist: Arbitrary[ExpHist] =
+    Arbitrary(for {
+      ticks <- arbitrary[List[Tick]]
+      conf <- arbitrary[ExpHist.Config]
+    } yield addAll(ExpHist.empty(conf), ticks))
 
   // The example in the paper is actually busted, based on his
   // algorithm. He says to assume that k/2 == 2, but then he promotes
@@ -26,46 +73,92 @@ class ExpHistLaws extends PropSpec with PropertyChecks with Matchers {
     incinc.windows shouldBe Vector(32, 16, 16, 8, 4, 2, 1)
   }
 
-  property("add and inc should generate the same results") {
-    forAll { (x: Short) =>
-      // Currently SUPER SLOW!
-      val i = x & 0xfff
-      val timestamp = 0L
-      val e = ExpHist.empty(20, 100)
+  property("adding i results in upperBoundSum == i") {
+    forAll { (conf: ExpHist.Config, tick: Tick) =>
+      assert(ExpHist.empty(conf)
+        .add(tick.count, tick.timestamp)
+        .upperBoundSum == tick.count)
+    }
+  }
 
-      val incs = (0L until i).foldLeft(e) {
-        case (acc, _) => acc.inc(timestamp)
+  property("step should be idempotent") {
+    forAll { (expHist: ExpHist, tick: Tick) =>
+      val ts = tick.timestamp
+      val stepped = expHist.step(ts)
+      assert(stepped == stepped.step(ts))
+
+      val added = expHist.add(tick.count, ts)
+      val addThenStep = added.step(ts)
+      val stepThenAdd = stepped.add(tick.count, ts)
+
+      assert(added == addThenStep)
+      assert(added == stepThenAdd)
+      assert(addThenStep == stepThenAdd)
+    }
+  }
+
+  property("stepping is the same as adding 0 at the same ts") {
+    forAll { (expHist: ExpHist, ts: PosNum[Long]) =>
+      assert(expHist.step(ts.value) == expHist.add(0, ts.value))
+    }
+  }
+
+  // This is the meat!
+  property("bounded error of the query") {
+    forAll { (items: NonEmptyList[Tick], conf: ExpHist.Config) =>
+      val ticks = items.sorted
+
+      val full = addAll(ExpHist.empty(conf), ticks)
+
+      val finalTs = ticks.last.timestamp
+
+      val actualSum = ticks.collect {
+        case Tick(count, ts) if ts > (finalTs - conf.windowSize) => count
+      }.sum
+
+      val upperBound = full.upperBoundSum
+      val lowerBound = full.lowerBoundSum
+      assert(lowerBound <= actualSum)
+      assert(upperBound >= actualSum)
+
+      val maxOutsideWindow = full.slowLast - 1
+      val minInsideWindow = 1 + full.slowTotal - full.slowLast
+      val absoluteError = maxOutsideWindow / 2.0
+      val relativeError = absoluteError / minInsideWindow
+      assert(ExpHist.relativeError(full) <= 1.0 / conf.k)
+    }
+  }
+
+  property("add and inc should generate the same results") {
+    forAll { (tick: Tick, conf: ExpHist.Config) =>
+      val e = ExpHist.empty(conf)
+
+      val incs = (0L until tick.count).foldLeft(e) {
+        case (acc, _) => acc.inc(tick.timestamp)
       }
 
-      val adds = e.add(i, timestamp)
+      val adds = e.add(tick.count, tick.timestamp)
 
       incs.slowTotal shouldEqual adds.slowTotal
-      incs.lowerBoundSum shouldEqual adds.lowerBoundSum
-      incs.upperBoundSum shouldEqual adds.upperBoundSum
+      assert(incs.lowerBoundSum == adds.lowerBoundSum)
+      assert(incs.upperBoundSum == adds.upperBoundSum)
     }
   }
 
   property("l-canonical representation round-trips") {
-    forAll { (x: Long, kIn: Short) =>
-      // i and k must be positive, > 0.
-      val i = (x & 0xfffffff) + 1
-      val k = (kIn & 0xfffff) + 1
-      ExpHist.expand(ExpHist.lNormalize(i, k)) shouldEqual i
+    forAll { (i: PosNum[Long], k: PosNum[Short]) =>
+      assert(ExpHist.expand(ExpHist.lNormalize(i.value, k.value)) == i.value)
     }
   }
 
   property("all i except last have either k/2, k/2 + 1 buckets") {
-    forAll { (x: Long, kIn: Short) =>
-      // i and k must be positive, > 0.
-      val i = (x & 0xfffffff) + 1
-      val k = (kIn & 0xfffff) + 1
-
-      val lower = ExpHist.minBuckets(k)
-      val upper = ExpHist.maxBuckets(k)
-
-      ExpHist.lNormalize(i, k).init.forall { numBuckets =>
-        lower <= numBuckets && numBuckets <= upper
-      } shouldBe true
+    forAll { (i: PosNum[Long], k: PosNum[Short]) =>
+      val lower = ExpHist.minBuckets(k.value)
+      val upper = ExpHist.maxBuckets(k.value)
+      assert(
+        ExpHist.lNormalize(i.value, k.value).init.forall { numBuckets =>
+          lower <= numBuckets && numBuckets <= upper
+        })
     }
   }
 }

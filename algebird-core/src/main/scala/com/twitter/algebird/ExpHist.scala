@@ -8,20 +8,27 @@ package com.twitter.algebird
  * Next step - code up the l-canonical representation of numbers,
  * then do some of the fancier business in the paper!
  */
+
 object ExpHist {
   private[this] def log2(i: Float): Double = math.log(i) / math.log(2)
 
   def minBuckets(k: Int) = math.ceil(k / 2.0).toInt
-  def maxBuckets(k: Int) = math.ceil(k / 2.0).toInt + 1
+  def maxBuckets(k: Int) = minBuckets(k) + 1
 
   /**
-   * Returns a sequence of the number of buckets of each size 2^i
-   * (where i is the vector index) used to represent s for a given k.
+   * returns a vector of the total number of buckets of size `s^i`,
+   * where `i` is the vector index, used to represent s for a given
+   * k.
+   *
+   * `s` is the "sum of the sizes of all of the buckets tracked by
+   * the ExpHist instance.
+   *
+   * `k` is `math.ceil(epsilon / 2)`, where epsilon is the relative
+   * error of `s`.
    */
   def lNormalize(s: Long, k: Int): Vector[Int] = {
     val l = minBuckets(k)
     val j = log2(s / l + 1).toInt
-
     // returns the little-endian bit rep of the supplied number.
     def binarize(sh: Long): Vector[Int] =
       ((0 until j).map { i => l + ((sh.toInt >> i) % 2) }).toVector
@@ -45,6 +52,15 @@ object ExpHist {
       .map { case (i, exp) => i.toLong << exp }
       .reduce(_ + _)
 
+  def relativeError(e: ExpHist): Double =
+    if (e.slowTotal == 0) 0.0
+    else {
+      val maxOutsideWindow = e.slowLast - 1
+      val minInsideWindow = 1 + e.slowTotal - e.slowLast
+      val absoluteError = maxOutsideWindow / 2.0
+      absoluteError / minInsideWindow
+    }
+
   case class Config(k: Int, windowSize: Long) {
     // Maximum number of buckets of size 2^i allowed in the repr of
     // this exponential histogram.
@@ -55,8 +71,8 @@ object ExpHist {
     def expiration(currTime: Long): Long = currTime - windowSize
   }
 
-  def empty(k: Int, windowSize: Long): ExpHist =
-    ExpHist(Config(k, windowSize), Vector.empty, 0L)
+  def empty(conf: Config): ExpHist = ExpHist(conf, Vector.empty, 0L)
+  def empty(k: Int, windowSize: Long): ExpHist = empty(Config(k, windowSize))
 }
 
 case class ExpHist(conf: ExpHist.Config, buckets: Vector[BucketSeq], time: Long) {
@@ -92,18 +108,19 @@ case class ExpHist(conf: ExpHist.Config, buckets: Vector[BucketSeq], time: Long)
    * the size. Repeat until the bucket size is less than the limit.
    */
   def inc(timestamp: Long): ExpHist = {
+    val stepped = step(timestamp)
     val newBuckets =
-      buckets.lastOption match {
+      stepped.buckets.lastOption match {
         case None => Vector(BucketSeq.one(timestamp))
-        case Some(bucketSeq) => buckets.init :+ (bucketSeq + timestamp)
+        case Some(bucketSeq) => stepped.buckets.init :+ (bucketSeq + timestamp)
       }
-    step(timestamp).copy(buckets = BucketSeq.normalize(conf.maxBuckets, newBuckets))
+    stepped.copy(buckets = BucketSeq.normalize(conf.maxBuckets, newBuckets))
   }
 
   // Stupid implementation of `add` - just inc a bunch of times with
   // the same timestamp.
   def add(i: Long, timestamp: Long): ExpHist =
-    (0L until i).foldLeft(this) {
+    (0L until i).foldLeft(this.step(timestamp)) {
       case (acc, _) => acc.inc(timestamp)
     }
 
@@ -161,8 +178,9 @@ case class BucketSeq(exp: BucketSeq.Pow2, timestamps: Vector[Long]) { l =>
    *  - Some(the filtered [[BucketSeq]]) otherwise.
    */
   def expire(cutoff: Long): Option[BucketSeq] =
-    Some(copy(timestamps = timestamps.filter(_ > cutoff)))
-      .filter(_.timestamps.isEmpty)
+    Some(timestamps.filter(_ > cutoff))
+      .filter(_.nonEmpty)
+      .map { v => copy(timestamps = v) }
 
   /**
    * Returns the number of pairs to drop to get this BucketSeq's final
@@ -188,9 +206,9 @@ case class BucketSeq(exp: BucketSeq.Pow2, timestamps: Vector[Long]) { l =>
     pairsToDrop(limit) match {
       case 0 => (this, None)
       case pairs =>
-        val childTs = (0 until pairs).map(i => timestamps(i * 2))
+        val childTs = (0 until pairs).map(i => timestamps(i * 2 + 1))
         val child = Some(BucketSeq(exp.double, childTs.toVector))
-        copy(timestamps = timestamps.drop(pairs * 2)) -> child
+        (copy(timestamps = timestamps.drop(pairs * 2)), child)
     }
 
   /**
@@ -203,9 +221,6 @@ case class BucketSeq(exp: BucketSeq.Pow2, timestamps: Vector[Long]) { l =>
       case (bs, None) => Vector(bs)
       case (bs, Some(remaining)) => remaining.expand(limit) :+ bs
     }
-
-  // A little janky, but lets us see nice strings of powers of 2.
-  override def toString: String = List.fill(length)(bucketSize).mkString(", ")
 }
 
 object BucketSeq {
@@ -225,8 +240,8 @@ object BucketSeq {
 
     val (ret, extra) = seqs.foldRight(empty) {
       case (bs, (acc, optCarry)) =>
-        val (evolved, carry) =
-          optCarry.map(_ ++ bs).getOrElse(bs).evolve(limit)
+        val withCarry = optCarry.map(_ ++ bs).getOrElse(bs)
+        val (evolved, carry) = withCarry.evolve(limit)
         (evolved +: acc, carry)
     }
 
