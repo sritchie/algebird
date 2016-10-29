@@ -53,10 +53,10 @@ object ExpHist {
       .reduce(_ + _)
 
   def relativeError(e: ExpHist): Double =
-    if (e.slowTotal == 0) 0.0
+    if (e.total == 0) 0.0
     else {
-      val maxOutsideWindow = e.slowLast - 1
-      val minInsideWindow = 1 + e.slowTotal - e.slowLast
+      val maxOutsideWindow = e.last - 1
+      val minInsideWindow = 1 + e.total - e.last
       val absoluteError = maxOutsideWindow / 2.0
       absoluteError / minInsideWindow
     }
@@ -71,7 +71,7 @@ object ExpHist {
     def expiration(currTime: Long): Long = currTime - windowSize
   }
 
-  def empty(conf: Config): ExpHist = ExpHist(conf, Vector.empty, 0L)
+  def empty(conf: Config): ExpHist = ExpHist(conf, Vector.empty, 0L, 0L, 0L)
   def empty(k: Int, windowSize: Long): ExpHist = empty(Config(k, windowSize))
 }
 
@@ -126,12 +126,12 @@ case class ExpHist(conf: ExpHist.Config, buckets: Vector[BucketSeq], time: Long)
 
   // TODO: Convert these to constructor params, compute as we go.
   // counter for the total size of all buckets.
-  def slowTotal: Long = buckets.map(_.count).reduceLeftOption(_ + _).getOrElse(0L)
+  def total: Long = buckets.map(_.count).reduceLeftOption(_ + _).getOrElse(0L)
   // returns the size of the oldest bucket.
-  def slowLast: Long = buckets.headOption.map(_.bucketSize).getOrElse(0L)
+  def last: Long = buckets.headOption.map(_.bucketSize).getOrElse(0L)
 
-  def lowerBoundSum: Long = slowTotal - slowLast
-  def upperBoundSum: Long = slowTotal
+  def lowerBoundSum: Long = total - last
+  def upperBoundSum: Long = total
 
   // For testing. Returns the vector of bucket sizes from largest to
   // smallest.

@@ -121,8 +121,8 @@ class ExpHistLaws extends PropSpec with PropertyChecks with Matchers {
       assert(lowerBound <= actualSum)
       assert(upperBound >= actualSum)
 
-      val maxOutsideWindow = full.slowLast - 1
-      val minInsideWindow = 1 + full.slowTotal - full.slowLast
+      val maxOutsideWindow = full.last - 1
+      val minInsideWindow = 1 + full.total - full.last
       val absoluteError = maxOutsideWindow / 2.0
       val relativeError = absoluteError / minInsideWindow
       assert(ExpHist.relativeError(full) <= 1.0 / conf.k)
@@ -139,7 +139,7 @@ class ExpHistLaws extends PropSpec with PropertyChecks with Matchers {
 
       val adds = e.add(tick.count, tick.timestamp)
 
-      incs.slowTotal shouldEqual adds.slowTotal
+      assert(incs.total == adds.total)
       assert(incs.lowerBoundSum == adds.lowerBoundSum)
       assert(incs.upperBoundSum == adds.upperBoundSum)
     }
