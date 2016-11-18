@@ -1,0 +1,272 @@
+<html><head><meta charset="utf-8" /><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" /><title>Algebird</title><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="description" content="Abstract Algebra for Scala." /><meta name="author" content="Algebird's contributors" /><meta name="og:image" content="/algebird/img/poster.png" /><meta name="og:title" content="Algebird" /><meta name="og:site_name" content="Algebird" /><meta name="og:url" content="http://twitter.github.io/algebird" /><meta name="og:type" content="website" /><meta name="og:description" content="Abstract Algebra for Scala." /><meta name="twitter:image" content="/algebird/img/poster.png" /><meta name="twitter:card" content="summary_large_image" /><meta name="twitter:site" content="" /><link rel="icon" type="image/png" href="/algebird/img/favicon.png" /><link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" /><link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css" /><link rel="stylesheet" href="/algebird/highlight/styles/atom-one-light.css" /><link rel="stylesheet" href="/algebird/css/style.css" /><link rel="stylesheet" href="/algebird/css/palette.css" /></head><body class="docs"><div id="wrapper"><div id="sidebar-wrapper"><ul id="sidebar" class="sidebar-nav"><li class="sidebar-brand"><a href="/algebird/" class="brand"><div class="brand-wrapper" style="background:url('/algebird/img/sidebar_brand.png') no-repeat"><span>Algebird</span></div></a></li> <li><a href="/algebird/datatypes.html" class="">Data Types</a></li> <li><a href="/algebird/datatypes/collections.html" class="">Collections</a> <ul class="sub_section"> <li><a href="/algebird/datatypes/collections.html" class="">Scala Collections</a></li> <li><a href="/algebird/datatypes/java_collections.html" class="">Java Collections</a></li></ul></li> <li><a href="/algebird/datatypes/approx.html" class="">Approximate Data Types</a> <ul class="sub_section"> <li><a href="/algebird/datatypes/approx/approximate.html" class="">Approximate</a></li> <li><a href="/algebird/datatypes/approx/bloom_filter.html" class="">Bloom Filter</a></li> <li><a href="/algebird/datatypes/approx/countminsketch.html" class="">Count Min Sketch</a></li> <li><a href="/algebird/datatypes/approx/exponential_histogram.html" class="">Exponential Histogram</a></li> <li><a href="/algebird/datatypes/approx/hyperloglog.html" class="">HyperLogLog</a></li> <li><a href="/algebird/datatypes/approx/hyperloglog_series.html" class="">HyperLogLog Series</a></li> <li><a href="/algebird/datatypes/approx/min_hasher.html" class="">MinHasher</a></li> <li><a href="/algebird/datatypes/approx/q_tree.html" class="">Q Tree</a></li> <li><a href="/algebird/datatypes/approx/space_saver.html" class="">SpaceSaver</a></li></ul></li> <li><a href="/algebird/datatypes/combinator.html" class="">Combinators</a> <ul class="sub_section"> <li><a href="/algebird/datatypes/combinator/caseclass.html" class="">Case Class Algebra</a></li> <li><a href="/algebird/datatypes/combinator/cuber.html" class="">Cuber</a></li> <li><a href="/algebird/datatypes/combinator/roller.html" class="">Roller</a></li> <li><a href="/algebird/datatypes/combinator/eventually.html" class="">Eventually</a></li> <li><a href="/algebird/datatypes/combinator/priority.html" class="">Priority</a></li> <li><a href="/algebird/datatypes/combinator/product_algebra.html" class="">Product/Tuple Algebra</a></li> <li><a href="/algebird/datatypes/combinator/monoid_statistics.html" class="">Monoid Statistics</a></li></ul></li> <li><a href="/algebird/datatypes/summer.html" class="">Summers</a> <ul class="sub_section"> <li><a href="/algebird/datatypes/summer/adaptive_cache.html" class="">AdaptiveCache</a></li> <li><a href="/algebird/datatypes/summer/batched.html" class="">Batched</a></li> <li><a href="/algebird/datatypes/summer/sum_all.html" class="">SumAll</a></li> <li><a href="/algebird/datatypes/summer/summingcache.html" class="">SummingCache</a></li> <li><a href="/algebird/datatypes/summer/summingiterator.html" class="">SummingIterator</a></li> <li><a href="/algebird/datatypes/summer/summingqueue.html" class="">SummingQueue</a></li></ul></li> <li><a href="/algebird/datatypes/adaptive_matrix.html" class="">Adaptive Matrix</a></li> <li><a href="/algebird/datatypes/adaptive_vector.html" class="">Adaptive Vector</a></li> <li><a href="/algebird/datatypes/affine_function.html" class="">Affine Function</a></li> <li><a href="/algebird/datatypes/averaged_value.html" class="">Averaged Value</a></li> <li><a href="/algebird/datatypes/bytes.html" class="">Bytes</a></li> <li><a href="/algebird/datatypes/decayed_value.html" class=" active ">Decayed Value</a></li> <li><a href="/algebird/datatypes/decayed_vector.html" class="">Decayed Vector</a></li> <li><a href="/algebird/datatypes/first_and_last.html" class="">First and Last</a></li> <li><a href="/algebird/datatypes/five_moments.html" class="">First Five Moments</a></li> <li><a href="/algebird/datatypes/gaussian_distribution.html" class="">Gaussian Distribution</a></li> <li><a href="/algebird/datatypes/interval.html" class="">Interval</a></li> <li><a href="/algebird/datatypes/min_and_max.html" class="">Min and Max</a></li> <li><a href="/algebird/datatypes/min_plus_algebra.html" class="">Min Plus Algebra</a></li> <li><a href="/algebird/datatypes/reset_state.html" class="">ResetState</a></li> <li><a href="/algebird/datatypes/right_folded.html" class="">RightFolded</a></li> <li><a href="/algebird/datatypes/set_diff.html" class="">SetDiff</a></li> <li><a href="/algebird/datatypes/sgd.html" class="">Stochastic Gradient Descent</a></li> <li><a href="/algebird/datatypes/topk.html" class="">TopK</a></li>        </ul></div><div id="page-content-wrapper"><div class="nav"><div class="container-fluid"><div class="row"><div class="col-lg-12"><div class="action-menu pull-left clearfix"><a href="#menu-toggle" id="menu-toggle"><i class="fa fa-bars" aria-hidden="true"></i></a></div><ul class="pull-right"><li class="hidden-xs"><a href="https://github.com/sritchie/algebird"><i class="fa fa-eye"></i><span>WATCH<span id="eyes" class="label label-default">--</span></span></a></li><li class="hidden-xs"><a href="https://github.com/sritchie/algebird"><i class="fa fa-star-o"></i><span>STARS<span id="stars" class="label label-default">--</span></span></a></li><li><a href="#" onclick="shareSiteTwitter('Algebird Abstract Algebra for Scala.');"><i class="fa fa-twitter"></i></a></li><li><a href="#" onclick="shareSiteFacebook('Algebird Abstract Algebra for Scala.');"><i class="fa fa-facebook"></i></a></li><li><a href="#" onclick="shareSiteGoogle();"><i class="fa fa-google-plus"></i></a></li></ul></div></div></div></div><div id="content" data-github-owner="sritchie" data-github-repo="algebird"><div class="content-wrapper"><section><h1 id="decayed-value-aka-moving-average">Decayed Value (aka. moving average)</h1>
+
+<p>A DecayedValue can be approximately computed into a moving average. Please see an explanation of different averages here: <a href="http://donlehmanjr.com/Science/03%20Decay%20Ave/032.htm">The Decaying Average</a>.</p>
+
+<p>@johnynek mentioned that:</p>
+
+<blockquote>
+  <p>a DecayedValue is approximately like a moving average value with window size of the half-life. It is EXACTLY a sample of the Laplace transform of the signal of values. Therefore, if we normalize a decayed value with halflife/ln(2), which is the integral of exp(-t(ln(2))/halflife) from 0 to infinity. We get a moving average of the window size equal to halflife.</p>
+</blockquote>
+
+<p>See the related issue: https://github.com/twitter/algebird/issues/235</p>
+
+<p>Here is the code example for computing a DecayedValue average:</p>
+
+<div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="k">import</span> <span class="nn">com.twitter.algebird._</span>
+<span class="c1">// import com.twitter.algebird._
+</span>
+<span class="k">val</span> <span class="n">data</span> <span class="k">=</span> <span class="o">{</span>
+  <span class="k">val</span> <span class="n">rnd</span> <span class="k">=</span> <span class="k">new</span> <span class="n">scala</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="nc">Random</span>
+  <span class="o">(</span><span class="mi">1</span> <span class="n">to</span> <span class="mi">100</span><span class="o">).</span><span class="n">map</span> <span class="o">{</span> <span class="k">_</span> <span class="k">=&gt;</span> <span class="n">rnd</span><span class="o">.</span><span class="n">nextInt</span><span class="o">(</span><span class="mi">1000</span><span class="o">).</span><span class="n">toDouble</span> <span class="o">}.</span><span class="n">toSeq</span>
+<span class="o">}</span>
+<span class="c1">// data: scala.collection.immutable.Seq[Double] = Vector(827.0, 162.0, 542.0, 101.0, 920.0, 728.0, 38.0, 80.0, 777.0, 148.0, 942.0, 594.0, 72.0, 352.0, 704.0, 379.0, 762.0, 67.0, 224.0, 562.0, 648.0, 796.0, 602.0, 366.0, 588.0, 863.0, 129.0, 753.0, 144.0, 968.0, 172.0, 164.0, 754.0, 209.0, 684.0, 115.0, 523.0, 369.0, 664.0, 495.0, 991.0, 780.0, 945.0, 577.0, 576.0, 449.0, 713.0, 202.0, 867.0, 900.0, 742.0, 484.0, 548.0, 559.0, 389.0, 155.0, 212.0, 143.0, 74.0, 366.0, 424.0, 962.0, 243.0, 421.0, 646.0, 232.0, 852.0, 438.0, 153.0, 397.0, 438.0, 463.0, 691.0, 545.0, 256.0, 250.0, 114.0, 905.0, 335.0, 296.0, 291.0, 894.0, 449.0, 851.0, 499.0, 279.0, 46.0, 269.0, 301.0, 726.0, 551.0, 430.0, 701.0, 213.0, 617.0, 238.0, 867.0, 963.0, 499.0, 112.0)
+</span>
+<span class="k">val</span> <span class="nc">HalfLife</span> <span class="k">=</span> <span class="mf">10.0</span>
+<span class="c1">// HalfLife: Double = 10.0
+</span>
+<span class="k">val</span> <span class="n">normalization</span> <span class="k">=</span> <span class="nc">HalfLife</span> <span class="o">/</span> <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="o">(</span><span class="mi">2</span><span class="o">)</span>
+<span class="c1">// normalization: Double = 14.426950408889635
+</span>
+<span class="k">implicit</span> <span class="k">val</span> <span class="n">dvMonoid</span> <span class="k">=</span> <span class="nc">DecayedValue</span><span class="o">.</span><span class="n">monoidWithEpsilon</span><span class="o">(</span><span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">3</span><span class="o">)</span>
+<span class="c1">// dvMonoid: com.twitter.algebird.Monoid[com.twitter.algebird.DecayedValue] = DecayedValueMonoid(0.001)
+</span>
+<span class="n">data</span><span class="o">.</span><span class="n">zipWithIndex</span><span class="o">.</span><span class="n">scanLeft</span><span class="o">(</span><span class="nc">Monoid</span><span class="o">.</span><span class="n">zero</span><span class="o">[</span><span class="kt">DecayedValue</span><span class="o">])</span> <span class="o">{</span> <span class="o">(</span><span class="n">previous</span><span class="o">,</span> <span class="n">data</span><span class="o">)</span> <span class="k">=&gt;</span>
+  <span class="k">val</span> <span class="o">(</span><span class="n">value</span><span class="o">,</span> <span class="n">time</span><span class="o">)</span> <span class="k">=</span> <span class="n">data</span>
+  <span class="k">val</span> <span class="n">decayed</span> <span class="k">=</span> <span class="nc">Monoid</span><span class="o">.</span><span class="n">plus</span><span class="o">(</span><span class="n">previous</span><span class="o">,</span> <span class="nc">DecayedValue</span><span class="o">.</span><span class="n">build</span><span class="o">(</span><span class="n">value</span><span class="o">,</span> <span class="n">time</span><span class="o">,</span> <span class="nc">HalfLife</span><span class="o">))</span>
+  <span class="n">println</span><span class="o">(</span><span class="s">"At %d: decayed=%f"</span><span class="o">.</span><span class="n">format</span><span class="o">(</span><span class="n">time</span><span class="o">,</span> <span class="o">(</span><span class="n">decayed</span><span class="o">.</span><span class="n">value</span> <span class="o">/</span> <span class="n">normalization</span><span class="o">)))</span>
+  <span class="n">decayed</span>
+<span class="o">}</span>
+<span class="c1">// At 0: decayed=57.323272
+// At 1: decayed=64.713488
+// At 2: decayed=97.948397
+// At 3: decayed=98.389872
+// At 4: decayed=155.570537
+// At 5: decayed=195.613559
+// At 6: decayed=185.147863
+// At 7: decayed=178.294242
+// At 8: decayed=220.211946
+// At 9: decayed=215.723589
+// At 10: decayed=266.571690
+// At 11: decayed=289.893124
+// At 12: decayed=275.470508
+// At 13: decayed=281.421853
+// At 14: decayed=311.373435
+// At 15: decayed=316.791966
+// At 16: decayed=348.395171
+// At 17: decayed=329.708274
+// At 18: decayed=323.155194
+// At 19: decayed=340.469329
+// At 20: decayed=362.585054
+// At 21: decayed=393.478333
+// At 22: decayed=408.855727
+// At 23: decayed=406.845069
+// At 24: decayed=420.356926
+// At 25: decayed=452.025482
+// At 26: decayed=430.696286
+// At 27: decayed=454.047827
+// At 28: decayed=433.622922
+// At 29: decayed=471.681139
+// At 30: decayed=452.016195
+// At 31: decayed=433.113637
+// At 32: decayed=456.372610
+// At 33: decayed=440.297477
+// At 34: decayed=458.223340
+// At 35: decayed=435.508686
+// At 36: decayed=442.595570
+// At 37: decayed=438.533399
+// At 38: decayed=455.191102
+// At 39: decayed=459.019101
+// At 40: decayed=496.970851
+// At 41: decayed=517.755680
+// At 42: decayed=548.585539
+// At 43: decayed=551.842999
+// At 44: decayed=554.813002
+// At 45: decayed=548.781143
+// At 46: decayed=561.452306
+// At 47: decayed=537.855098
+// At 48: decayed=561.932411
+// At 49: decayed=586.684725
+// At 50: decayed=598.827725
+// At 51: decayed=592.274347
+// At 52: decayed=590.595971
+// At 53: decayed=589.792453
+// At 54: decayed=577.259242
+// At 55: decayed=549.345699
+// At 56: decayed=527.252381
+// At 57: decayed=501.855871
+// At 58: decayed=473.377374
+// At 59: decayed=467.045894
+// At 60: decayed=465.158668
+// At 61: decayed=500.689143
+// At 62: decayed=484.002965
+// At 63: decayed=480.772231
+// At 64: decayed=493.353661
+// At 65: decayed=476.396256
+// At 66: decayed=503.549564
+// At 67: decayed=500.188203
+// At 68: decayed=477.297247
+// At 69: decayed=472.852021
+// At 70: decayed=471.546382
+// At 71: decayed=472.061046
+// At 72: decayed=488.345000
+// At 73: decayed=493.418518
+// At 74: decayed=478.120324
+// At 75: decayed=463.430715
+// At 76: decayed=440.298025
+// At 77: decayed=473.542403
+// At 78: decayed=465.051115
+// At 79: decayed=454.425190
+// At 80: decayed=444.164277
+// At 81: decayed=476.387282
+// At 82: decayed=475.607360
+// At 83: decayed=502.744183
+// At 84: decayed=503.664953
+// At 85: decayed=489.274824
+// At 86: decayed=459.698030
+// At 87: decayed=447.559087
+// At 88: decayed=438.451124
+// At 89: decayed=459.411849
+// At 90: decayed=466.838822
+// At 91: decayed=465.381351
+// At 92: decayed=482.805772
+// At 93: decayed=465.237748
+// At 94: decayed=476.849349
+// At 95: decayed=461.413078
+// At 96: decayed=490.609485
+// At 97: decayed=524.504909
+// At 98: decayed=523.968428
+// At 99: decayed=496.643079
+// res0: scala.collection.immutable.Seq[com.twitter.algebird.DecayedValue] = Vector(DecayedValue(0.0,-Infinity), DecayedValue(827.0,0.0), DecayedValue(933.6182840009398,0.06931471805599453), DecayedValue(1413.0966604748573,0.13862943611198905), DecayedValue(1419.4658044535283,0.20794415416798356), DecayedValue(2244.408425913476,0.2772588722239781), DecayedValue(2822.1071078604677,0.34657359027997264), DecayedValue(2671.11903728434,0.4158883083359671), DecayedValue(2572.2421861083244,0.48520302639196167), DecayedValue(3176.986821861827,0.5545177444479562), DecayedValue(3112.233518474755,0.6238324625039507), DecayedValue(3845.816550103624,0.6931471805599453), DecayedValue(4182.273720644949,0.7624618986159398), DecayedValue(3974.1993609991314,0.8317766166719343), DecayedValue(4060.05911875668...
+</span></code></pre>
+</div>
+
+<p>Running the above code in comparison with a simple decayed average:</p>
+
+<div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="n">data</span><span class="o">.</span><span class="n">zipWithIndex</span><span class="o">.</span><span class="n">scanLeft</span><span class="o">(</span><span class="mf">0.0</span><span class="o">)</span> <span class="o">{</span> <span class="o">(</span><span class="n">previous</span><span class="o">,</span> <span class="n">data</span><span class="o">)</span> <span class="k">=&gt;</span>
+  <span class="k">val</span> <span class="o">(</span><span class="n">value</span><span class="o">,</span> <span class="n">time</span><span class="o">)</span> <span class="k">=</span> <span class="n">data</span>
+  <span class="k">val</span> <span class="n">avg</span> <span class="k">=</span> <span class="o">(</span><span class="n">value</span> <span class="o">+</span> <span class="n">previous</span> <span class="o">*</span> <span class="o">(</span><span class="nc">HalfLife</span> <span class="o">-</span> <span class="mf">1.0</span><span class="o">))</span> <span class="o">/</span> <span class="nc">HalfLife</span>
+  <span class="n">println</span><span class="o">(</span><span class="s">"At %d: windowed=%f"</span><span class="o">.</span><span class="n">format</span><span class="o">(</span><span class="n">time</span><span class="o">,</span> <span class="n">avg</span><span class="o">))</span>
+  <span class="n">avg</span>
+<span class="o">}</span>
+<span class="c1">// At 0: windowed=82.700000
+// At 1: windowed=90.630000
+// At 2: windowed=135.767000
+// At 3: windowed=132.290300
+// At 4: windowed=211.061270
+// At 5: windowed=262.755143
+// At 6: windowed=240.279629
+// At 7: windowed=224.251666
+// At 8: windowed=279.526499
+// At 9: windowed=266.373849
+// At 10: windowed=333.936464
+// At 11: windowed=359.942818
+// At 12: windowed=331.148536
+// At 13: windowed=333.233683
+// At 14: windowed=370.310314
+// At 15: windowed=371.179283
+// At 16: windowed=410.261355
+// At 17: windowed=375.935219
+// At 18: windowed=360.741697
+// At 19: windowed=380.867527
+// At 20: windowed=407.580775
+// At 21: windowed=446.422697
+// At 22: windowed=461.980428
+// At 23: windowed=452.382385
+// At 24: windowed=465.944146
+// At 25: windowed=505.649732
+// At 26: windowed=467.984759
+// At 27: windowed=496.486283
+// At 28: windowed=461.237654
+// At 29: windowed=511.913889
+// At 30: windowed=477.922500
+// At 31: windowed=446.530250
+// At 32: windowed=477.277225
+// At 33: windowed=450.449503
+// At 34: windowed=473.804552
+// At 35: windowed=437.924097
+// At 36: windowed=446.431687
+// At 37: windowed=438.688519
+// At 38: windowed=461.219667
+// At 39: windowed=464.597700
+// At 40: windowed=517.237930
+// At 41: windowed=543.514137
+// At 42: windowed=583.662723
+// At 43: windowed=582.996451
+// At 44: windowed=582.296806
+// At 45: windowed=568.967125
+// At 46: windowed=583.370413
+// At 47: windowed=545.233372
+// At 48: windowed=577.410034
+// At 49: windowed=609.669031
+// At 50: windowed=622.902128
+// At 51: windowed=609.011915
+// At 52: windowed=602.910724
+// At 53: windowed=598.519651
+// At 54: windowed=577.567686
+// At 55: windowed=535.310917
+// At 56: windowed=502.979826
+// At 57: windowed=466.981843
+// At 58: windowed=427.683659
+// At 59: windowed=421.515293
+// At 60: windowed=421.763764
+// At 61: windowed=475.787387
+// At 62: windowed=452.508649
+// At 63: windowed=449.357784
+// At 64: windowed=469.022005
+// At 65: windowed=445.319805
+// At 66: windowed=485.987824
+// At 67: windowed=481.189042
+// At 68: windowed=448.370138
+// At 69: windowed=443.233124
+// At 70: windowed=442.709812
+// At 71: windowed=444.738830
+// At 72: windowed=469.364947
+// At 73: windowed=476.928453
+// At 74: windowed=454.835607
+// At 75: windowed=434.352047
+// At 76: windowed=402.316842
+// At 77: windowed=452.585158
+// At 78: windowed=440.826642
+// At 79: windowed=426.343978
+// At 80: windowed=412.809580
+// At 81: windowed=460.928622
+// At 82: windowed=459.735760
+// At 83: windowed=498.862184
+// At 84: windowed=498.875965
+// At 85: windowed=476.888369
+// At 86: windowed=433.799532
+// At 87: windowed=417.319579
+// At 88: windowed=405.687621
+// At 89: windowed=437.718859
+// At 90: windowed=449.046973
+// At 91: windowed=447.142276
+// At 92: windowed=472.528048
+// At 93: windowed=446.575243
+// At 94: windowed=463.617719
+// At 95: windowed=441.055947
+// At 96: windowed=483.650352
+// At 97: windowed=531.585317
+// At 98: windowed=528.326785
+// At 99: windowed=486.694107
+// res1: scala.collection.immutable.Seq[Double] = Vector(0.0, 82.7, 90.63000000000001, 135.767, 132.2903, 211.06127, 262.755143, 240.27962869999996, 224.25166582999995, 279.52649924699995, 266.3738493223, 333.93646439007, 359.942817951063, 331.14853615595666, 333.233682540361, 370.31031428632485, 371.17928285769233, 410.26135457192305, 375.9352191147308, 360.74169720325773, 380.86752748293196, 407.5807747346388, 446.4226972611749, 461.9804275350574, 452.38238478155165, 465.9441463033965, 505.64973167305686, 467.98475850575113, 496.486282655176, 461.23765438965836, 511.91388895069247, 477.9225000556232, 446.53025005006083, 477.2772250450547, 450.4495025405492, 473.80455228649424, 437.92409705784485, 446.43168735206035, 438.68851861685437, 461.2196667551689, 464.597700079652, 517.23793007168...
+</span></code></pre>
+</div>
+
+<p>You’ll see that the averages are pretty close to each other.</p>
+
+<h2 id="decayedvalue-faq">DecayedValue FAQ</h2>
+
+<h3 id="is-a-decayedvalue-average-better-than-a-moving-average">Is a DecayedValue average better than a moving average?</h3>
+
+<p>DecayedValue gives an exponential moving average. A standard windowed moving average of N points requires O(N) memory. An exponential moving average takes O(1) memory. That’s the win. Usually one, or a few, exponential moving averages gives you what you need cheaper than the naive approach of keeping 100 or 1000 recent points.</p>
+
+<h3 id="is-a-decayedvalue-average-better-than-a-simple-decayed-average">Is a DecayedValue average better than a simple decayed average?</h3>
+
+<p>A simple decayed average looks like this: <code class="highlighter-rouge">val avg = (value + previousAvg * (HaflLife - 1.0)) / HalfLife</code></p>
+
+<p>In a way, a DecayedValue average is a simple decayed average with different scaling factor.</p>
+</section></div></div></div></div><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script><script src="/algebird/highlight/highlight.pack.js"></script><script>hljs.configure({
+languages:['scala','java','bash']
+});
+hljs.initHighlighting();
+             </script><script src="/algebird/js/main.js"></script></body></html>
